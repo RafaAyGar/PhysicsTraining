@@ -5,24 +5,46 @@ using UnityEngine;
 public class CircularMoving : MonoBehaviour
 {
 
-    public Transform center;
-    public float angle = 0;
-    public Vector3 offset, distancia;
+    //Public variables
+    public float speed = 10, initialDistance = 0;
+    public bool moving = false;
+    public Vector3 distance, perpendicularDistance, normalizedDistance;
+    //Private Variables
+    Transform center;
     Rigidbody playerRigidbody;
 
     // Start is called before the first frame update
     void Start()
     {
-        center = GameObject.FindGameObjectWithTag("Finish").transform;
+        center = GameObject.FindGameObjectWithTag("Center").transform;
         playerRigidbody = GetComponent<Rigidbody>();
-        
+        distance = center.position - transform.position;
     }
 
     // Update is called once per frame
     void Update()
     {
-        distancia = center.position - transform.position;
-        playerRigidbody.AddForce(distancia);
-        playerRigidbody.AddForce(new Vector3(-distancia.y, distancia.x, 0));
+        if(Input.GetKeyDown(KeyCode.Space))
+        {
+            moving = !moving;
+            initialDistance = distance.magnitude;
+        }
+        if(moving)
+        {
+            //We desactivate the gravity so it doesn't affect the movement
+            playerRigidbody.useGravity = false;
+
+            //Refresh the distance vector every second to get the proper normalized vector(normalizedDistance) below
+            distance = center.position - transform.position;
+            normalizedDistance = distance.normalized;
+
+            //We get the perpendicular vector to normalizedDistance, this vector will be in every frame tangent to the circumference that the object
+            //attached to this script will travel
+            perpendicularDistance = new Vector3(-normalizedDistance.y, normalizedDistance.x, 0);
+
+            //We modify the velocity component of our object matching it with the tangent vector, and multiplied by the distance to make the
+            //circumference radio equal to the initial distance they were before starting the movement
+            playerRigidbody.velocity = perpendicularDistance * initialDistance;
+        }
     }
 }
